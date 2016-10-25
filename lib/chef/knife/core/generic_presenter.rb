@@ -29,6 +29,12 @@ class Chef
         def self.included(includer)
           includer.class_eval do
             @attrs_to_show = []
+
+            option :field_separator,
+              :short => "-S SEPARATOR",
+              :long => "--field-separator SEPARATOR",
+              :description => "Character separator used to delineate nesting in --attribute filters"
+
             option :attribute,
               :short => "-a ATTR1 [-a ATTR2]",
               :long => "--attribute ATTR1 [--attribute ATTR2] ",
@@ -177,8 +183,15 @@ class Chef
           config[:attribute] || config[:run_list]
         end
 
+        # GenericPresenter is used in contexts where MultiAttributeReturnOption
+        # is not, so we need to set the default value here rather than as part
+        # of the CLI option.
+        def attribute_field_separator
+          config[:field_separator] || "."
+        end
+
         def extract_nested_value(data, nested_value_spec)
-          nested_value_spec.split(".").each do |attr|
+          nested_value_spec.split(attribute_field_separator).each do |attr|
             data =
               if data.is_a?(Array)
                 data[attr.to_i]
